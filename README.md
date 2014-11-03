@@ -1,6 +1,6 @@
 # AngularJS Style Guide
 
-See [John Papa's original guidelines](https://github.com/johnpapa/angularjs-styleguide) for comments and credits 
+See [John Papa's original guidelines](https://github.com/johnpapa/angularjs-styleguide) for comments and credits. Also check out [Todd Motto's guidelines](https://github.com/toddmotto/angularjs-styleguide) as I used a couple of his suggestions.
 
 ## Table of Contents
 
