@@ -39,6 +39,8 @@ While this guide explains the *what*, *why* and *how*, I find it helpful to see 
   1. [Modularity](#modularity)
   1. [Startup Logic](#startup-logic)
   1. [Angular $ Wrapper Services](#angular--wrapper-services)
+  1. [Publish and subscribe events](#publish-and-subscribe-events)
+  1. [Performance](#performance)
   1. [Testing](#testing)
   1. [Animations](#animations) 
   1. [Comments](#comments)
@@ -2241,6 +2243,75 @@ Unit testing helps maintain clean code, as such I included some of my recommenda
 
     // and so on
     ```
+
+**[Back to top](#table-of-contents)**
+
+## Publish and subscribe events
+
+  - **$scope**: Use the `$emit` and `$broadcast` methods to trigger events to direct relationship scopes only
+
+    ```javascript
+    // up the $scope
+    $scope.$emit('customEvent', data);
+
+    // down the $scope
+    $scope.$broadcast('customEvent', data);
+    ```
+
+  - **$rootScope**: Use only `$emit` as an application-wide event bus and remember to unbind listeners
+
+    ```javascript
+    // all $rootScope.$on listeners
+    $rootScope.$emit('customEvent', data);
+    ```
+
+  - Hint: Because the `$rootScope` is never destroyed, `$rootScope.$on` listeners aren't either, unlike `$scope.$on` listeners and will always persist, so they need destroying when the relevant `$scope` fires the `$destroy` event
+
+    ```javascript
+    // call the closure
+    var unbind = $rootScope.$on('customEvent'[, callback]);
+    $scope.$on('$destroy', unbind);
+    ```
+
+  - For multiple `$rootScope` listeners, use an Object literal and loop each one on the `$destroy` event to unbind all automatically
+
+    ```javascript
+    var rootListeners = {
+      'customEvent1': $rootScope.$on('customEvent1'[, callback]),
+      'customEvent2': $rootScope.$on('customEvent2'[, callback]),
+      'customEvent3': $rootScope.$on('customEvent3'[, callback])
+    };
+    for (var unbind in rootListeners) {
+      $scope.$on('$destroy', rootListeners[unbind]);
+    }
+    ```
+
+**[Back to top](#table-of-contents)**
+
+## Performance
+
+  - **One-time binding syntax**: In newer versions of Angular (v1.3.0-beta.10+), use the one-time binding syntax `{{ ::value }}` where it makes sense
+
+    ```html
+    // avoid
+    <h1>{{ vm.title }}</h1>
+
+    // recommended
+    <h1>{{ ::vm.title }}</h1>
+    ```
+    
+    *Why?* : Binding once removes the watcher from the scope's `$$watchers` array after the `undefined` variable becomes resolved, thus improving performance in each dirty-check
+    
+  - **Consider $scope.$digest**: Use `$scope.$digest` over `$scope.$apply` where it makes sense. Only child scopes will update
+
+    ```javascript
+    $scope.$digest();
+    ```
+    
+    *Why?* : `$scope.$apply` will call `$rootScope.$digest`, which causes the entire application `$$watchers` to dirty-check again. Using `$scope.$digest` will dirty check current and child scopes from the initiated `$scope`
+
+**[Back to top](#table-of-contents)**
+
 
 ### Testing Library
 
