@@ -626,6 +626,34 @@ While this guide explains the *what*, *why* and *how*, I find it helpful to see 
   </div>
   ```
 
+### Inheritance
+  
+  - If needed, use prototypal inheritance when extending controller classes
+
+  ```javascript
+  /* recommended */
+
+    function BaseCtrl () {
+      this.doSomething = function () {
+        // do something
+      };
+    }
+    BaseCtrl.prototype.someObject = {};
+    BaseCtrl.prototype.sharedSomething = function () {
+        // shared Something
+    };
+
+    AnotherCtrl.prototype = Object.create(BaseCtrl.prototype);
+
+    function AnotherCtrl () {
+      this.anotherSomething = function () {
+	// another Something
+      };
+    }
+  ```
+
+  - Use `Object.create` with a polyfill for browser support
+
 **[Back to top](#table-of-contents)**
 
 ## Services
@@ -1288,6 +1316,53 @@ While this guide explains the *what*, *why* and *how*, I find it helpful to see 
   ```
 
     Note: The code example's dependency on `movieService` is not minification safe on its own. For details on how to make this code minification safe, see the sections on [dependency injection](#manual-annotating-for-dependency-injection) and on [minification and annotation](#minification-and-annotation).
+
+
+  - *Controller.resolve property*: Never bind logic to the router itself. Reference a `resolve` property for each Controller to couple the logic
+
+  ```javascript
+  // avoid
+  function MainCtrl (SomeService) {
+    this.something = SomeService.something;
+  }
+
+  function config ($routeProvider) {
+    $routeProvider
+      .when('/', {
+        templateUrl: 'views/main.html',
+        controllerAs: 'vm',
+        controller: 'MainCtrl'
+        resolve: {
+          doSomething: function () {
+            return SomeService.doSomething()
+          }
+        }
+      });
+  }
+
+  // recommended
+  function MainCtrl (SomeService) {
+    this.something = SomeService.something;
+  }
+
+  MainCtrl.resolve = {
+    doSomething: function (SomeService) {
+      return SomeService.doSomething();
+    }
+  };
+
+  function config ($routeProvider) {
+    $routeProvider
+    .when('/', {
+      templateUrl: 'views/main.html',
+      controllerAs: 'vm',
+      controller: 'MainCtrl'
+      resolve: MainCtrl.resolve
+    });
+  }
+  ```
+
+  - This keeps resolve dependencies inside the same file as the Controller and the router free from logic
 
 **[Back to top](#table-of-contents)**
 
